@@ -8,7 +8,7 @@ jmp 0x1000:START
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	Preferences data about MINT64 OS
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-TOTALSECTORCOUNT: dw 1024 ; size of MINT64 OS ima except boot loader
+TOTALSECTORCOUNT: dw 0x02 ; size of MINT64 OS ima except boot loader
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
