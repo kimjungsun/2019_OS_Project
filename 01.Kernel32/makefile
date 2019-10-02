@@ -1,17 +1,10 @@
-#######################################
-#	Set build environment and rule
-#######################################
-NASM32 = nasm
-GCC32 = gcc -c -m32 -ffreestanding -w
+NASM32 =nasm
+GCC32 = gcc -c -m32 -ffreestanding
 LD32 = ld -melf_i386 -T ../elf_i386.x -nostdlib -e Main -Ttext 0x10400
 OBJCOPY32 = objcopy -j .text -j .data -j .rodata -j .bss -S -O binary
-
 OBJECTDIRECTORY = Temp
-SOURCEDIRECTORY	= Source
+SOURCEDIRECTORY = Source
 
-#######################################
-#	Set build items and build methods
-#######################################
 all: prepare Kernel32.bin
 
 prepare:
@@ -21,38 +14,33 @@ $(OBJECTDIRECTORY)/EntryPoint.bin: $(SOURCEDIRECTORY)/EntryPoint.s
 	$(NASM32) -o $@ $<
 
 dep:
-	@echo === Make Dependancy File ===
+	@echo
+	@echo =============== Make Dependancy File ===============
 	make -C $(OBJECTDIRECTORY) -f ../makefile InternalDependency
-	@echo === Dependancy Search Complete ===
-
+	@echo =============== Dependancy Search Complete ===============
+	@echo
 ExecuteInternalBuild: dep
 	make -C $(OBJECTDIRECTORY) -f ../makefile Kernel32.elf
 
-$(OBJECTDIRECTORY)/Kernel32.elf.bin: ExecuteInternalBuild
+$(OBJECTDIRECTORY)/Kernel32.elf.bin:ExecuteInternalBuild
 	$(OBJCOPY32) $(OBJECTDIRECTORY)/Kernel32.elf $@
 
 Kernel32.bin: $(OBJECTDIRECTORY)/EntryPoint.bin $(OBJECTDIRECTORY)/Kernel32.elf.bin
 	cat $^ > $@
-		
+
 clean:
 	rm -f *.bin
 	rm -f $(OBJECTDIRECTORY)/*.*
 
-#######################################
-#	Called back by Make, based on the
-#	Temp directory
-#######################################
 CENTRYPOINTOBJECTFILE = Main.o
 CSOURCEFILES = $(wildcard ../$(SOURCEDIRECTORY)/*.c)
 ASSEMBLYSOURCEFILES = $(wildcard ../$(SOURCEDIRECTORY)/*.asm)
 COBJECTFILES = $(subst Main.o, , $(notdir $(patsubst %.c,%.o,$(CSOURCEFILES))))
 ASSEMBLYOBJECTFILES = $(notdir $(patsubst %.asm,%.o,$(ASSEMBLYSOURCEFILES)))
 
-#	.c file -> .o file
 %.o: ../$(SOURCEDIRECTORY)/%.c
-	$(GCC32) -c $<
+	$(GCC32) -C $<
 
-#	.asm file -> .o file
 %.o: ../$(SOURCEDIRECTORY)/%.asm
 	$(NASM32) -f elf32 -o $@ $<
 

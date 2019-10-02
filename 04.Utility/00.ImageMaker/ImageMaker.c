@@ -7,6 +7,7 @@
 #include <errno.h>
 
 #define BYTESOFSECTOR  512
+#define O_BINARY 0
 
 int AdjustInSectorSize( int iFd, int iSourceSize );
 void WriteKernelInformation( int iTargetFd, int iKernelSectorCount );
@@ -15,59 +16,57 @@ int CopyFile( int iSourceFd, int iTargetFd );
 int main(int argc, char* argv[])
 {
     int iSourceFd;
-    int iTargetFd;
-    int iBootLoaderSize;
+	int iTargetFd;
+    int iBootLoaderSize1;
+    int iBootLoaderSize2;
     int iKernel32SectorCount;
     int iSourceSize;
-
+        
     if( argc < 4 )
     {
-        fprintf( stderr, "[ERROR] ImageMaker.exe BootLoader1.bin BootLoader2.bin Kernel32.bin\n" );
+        fprintf( stderr, "[ERROR] ImageMaker.exe BootLoader.bin Kernel32.bin\n" );
         exit( -1 );
     }
     
-    if( ( iTargetFd = open( "Disk.img", O_RDWR | O_CREAT |  O_TRUNC, S_IREAD | S_IWRITE ) ) == -1 )
+    if( ( iTargetFd = open( "Disk.img", O_RDWR | O_CREAT |  O_TRUNC |
+            O_BINARY, S_IREAD | S_IWRITE ) ) == -1 )
     {
         fprintf( stderr , "[ERROR] Disk.img open fail.\n" );
         exit( -1 );
     }
 
     printf( "[INFO] Copy boot loader1 to image file\n" );
-    if( (iSourceFd = open( argv[ 1 ], O_RDONLY)) == -1 )
+    if( ( iSourceFd = open( argv[ 1 ], O_RDONLY | O_BINARY ) ) == -1 )
     {
-        fprintf( stderr, "[ERROR] %s open fail\n", argv[ 1 ]);
+        fprintf( stderr, "[ERROR] %s open fail\n", argv[ 1 ] );
         exit( -1 );
     }
 
     iSourceSize = CopyFile( iSourceFd, iTargetFd );
     close( iSourceFd );
-	
-    iBootLoaderSize = AdjustInSectorSize( iTargetFd , iSourceSize );
+
+    iBootLoaderSize1 = AdjustInSectorSize( iTargetFd , iSourceSize );
     printf( "[INFO] %s size = [%d] and sector count = [%d]\n",
-            argv[ 1 ], iSourceSize, iBootLoaderSize );
+            argv[ 1 ], iSourceSize, iBootLoaderSize1 );
 
-
-    //Copy BootLoader2 to image file.
-    //Added Point
     printf( "[INFO] Copy boot loader2 to image file\n" );
-    if( (iSourceFd = open( argv[ 2 ], O_RDONLY)) == -1 )
+    if( ( iSourceFd = open( argv[ 2 ], O_RDONLY | O_BINARY ) ) == -1 )
     {
-		fprintf( stderr, "[ERROR] %s open fail\n", argv[ 2 ]);
-		exit( -1 );
+        fprintf( stderr, "[ERROR] %s open fail\n", argv[ 2 ] );
+        exit( -1 );
     }
 
     iSourceSize = CopyFile( iSourceFd, iTargetFd );
     close( iSourceFd );
     
-    iBootLoaderSize = AdjustInSectorSize( iTargetFd , iSourceSize );
+    iBootLoaderSize2 = AdjustInSectorSize( iTargetFd , iSourceSize );
     printf( "[INFO] %s size = [%d] and sector count = [%d]\n",
-            argv[ 2 ], iSourceSize, iBootLoaderSize );
-	//////////////////////////////////////////////////
-	
+            argv[ 1 ], iSourceSize, iBootLoaderSize2 );
+
     printf( "[INFO] Copy protected mode kernel to image file\n" );
-    if( ( iSourceFd = open( argv[ 3 ], O_RDONLY) ) == -1 )
+    if( ( iSourceFd = open( argv[ 3 ], O_RDONLY | O_BINARY ) ) == -1 )
     {
-        fprintf( stderr, "[ERROR] %s open fail\n", argv[ 3 ] );
+        fprintf( stderr, "[ERROR] %s open fail\n", argv[ 2 ] );
         exit( -1 );
     }
 
@@ -76,8 +75,7 @@ int main(int argc, char* argv[])
     
     iKernel32SectorCount = AdjustInSectorSize( iTargetFd, iSourceSize );
     printf( "[INFO] %s size = [%d] and sector count = [%d]\n",
-                argv[ 3 ], iSourceSize, iKernel32SectorCount );
-
+                argv[ 2 ], iSourceSize, iKernel32SectorCount );
 
     printf( "[INFO] Start to write kernel information\n" );    
     WriteKernelInformation( iTargetFd, iKernel32SectorCount );
@@ -100,7 +98,8 @@ int AdjustInSectorSize( int iFd, int iSourceSize )
     if( iAdjustSizeToSector != 0 )
     {
         iAdjustSizeToSector = 512 - iAdjustSizeToSector;
-        printf( "[INFO] File size [%d] and fill [%d] byte\n", iSourceSize, iAdjustSizeToSector );
+        printf( "[INFO] File size [%u] and fill [%u] byte\n", iSourceSize, 
+            iAdjustSizeToSector );
         for( i = 0 ; i < iAdjustSizeToSector ; i++ )
         {
             write( iFd , &cCh , 1 );
@@ -120,18 +119,18 @@ void WriteKernelInformation( int iTargetFd, int iKernelSectorCount )
     unsigned short usData;
     long lPosition;
     
-    lPosition = lseek( iTargetFd, (off_t)5, SEEK_SET );
+    lPosition = lseek( iTargetFd, (off_t)1029, SEEK_SET );
     if( lPosition == -1 )
     {
-        fprintf( stderr, "lseek fail. Return value = %d, errno = %d, %d\n", lPosition, errno, SEEK_SET );
+        fprintf( stderr, "lseek fail. Return value = %ld, errno = %d, %d\n", 
+            lPosition, errno, SEEK_SET );
         exit( -1 );
     }
 
     usData = ( unsigned short ) iKernelSectorCount;
     write( iTargetFd, &usData, 2 );
-
     printf( "[INFO] Total sector count except boot loader [%d]\n", 
-        iKernelSectorCount );
+        usData );
 }
 
 int CopyFile( int iSourceFd, int iTargetFd )

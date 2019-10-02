@@ -5,6 +5,6 @@ ImageMaker.exe: ImageMaker.c
 
 mov:
 	mv ImageMaker.exe ../../
-	
+
 clean:
 	rm -f ImageMaker.exe
