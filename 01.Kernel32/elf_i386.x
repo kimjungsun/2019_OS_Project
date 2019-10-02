@@ -3,7 +3,7 @@ OUTPUT_FORMAT("elf32-i386", "elf32-i386",
 	      "elf32-i386")
 OUTPUT_ARCH(i386)
 ENTRY(_start)
-SEARCH_DIR("/usr/bin");
+SEARCH_DIR("/usr/lib/ldsripts");
 SECTIONS
 {
   /* Read-only sections, merged into text segment: */
@@ -11,6 +11,7 @@ SECTIONS
 /*********************************************************************************/
   .text 0x10400          :
   {
+    Main.o(.text)
     *(.text .stub .text.* .gnu.linkonce.t.*)
     /* .gnu.warning sections are handled specially by elf32.em.  */
     *(.gnu.warning)

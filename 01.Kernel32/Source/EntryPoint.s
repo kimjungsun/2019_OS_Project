@@ -42,7 +42,7 @@ PROTECTEDMODE:
 	call PRINTMESSAGE
 	add esp, 12
 
-	jmp dword 0x08:0x10400	; C Language Kernel Execution 
+	jmp dword 0x08: 0x10400	; C Language Kernel Execution 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;	Function Code

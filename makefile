@@ -1,4 +1,4 @@
-all: BootLoader Kernel32 Disk.img Utility
+all: BootLoader Kernel32 Disk.img
 
 BootLoader:
 	@echo 
@@ -34,16 +34,6 @@ Disk.img: 00.BootLoader/BootLoader1.bin 00.BootLoader/BootLoader2.bin 01.Kernel3
 	@echo ============= All Build Complete =============
 	@echo 
 	
-Utility:
-	@echo 
-	@echo =========== Utility Build Start ===========
-	@echo 
-
-	make -C 04.Utility
-
-	@echo 
-	@echo =========== Utility Build Complete ===========
-	@echo 
 run:
 	qemu-system-x86_64 -L . -fda Disk.img -m 65 -localtime -M pc -rtc base=localtime
 
@@ -52,3 +42,4 @@ clean:
 	make -C 01.Kernel32 clean
 	make -C 04.Utility clean
 	rm -f Disk.img	
+	rm -f ImageMaker.exe

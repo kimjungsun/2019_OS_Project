@@ -1,10 +1,5 @@
 all: ImageMaker
 
-ImageMaker.exe: ImageMaker.c
-	gcc -o $@ $<
-
-clean:
-	rm -f ImageMaker.exe
 ImageMaker:
 	@echo 
 	@echo ============= Build ImageMaker ===============
