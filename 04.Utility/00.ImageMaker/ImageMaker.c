@@ -8,7 +8,6 @@
 #include <errno.h>
 
 #define BYTESOFSECTOR  512
-#define O_BINARY 0
 
 int AdjustInSectorSize( int iFd, int iSourceSize );
 void WriteKernelInformation( int iTargetFd, int iKernelSectorCount, int iKernel32SectorCount );
@@ -30,15 +29,14 @@ int main(int argc, char* argv[])
         exit( -1 );
     }
     
-    if( ( iTargetFd = open( "Disk.img", O_RDWR | O_CREAT |  O_TRUNC |
-            O_BINARY, S_IREAD | S_IWRITE ) ) == -1 )
+    if( ( iTargetFd = open( "Disk.img", O_RDWR | O_CREAT |  O_TRUNC , S_IREAD | S_IWRITE ) ) == -1 )
     {
         fprintf( stderr , "[ERROR] Disk.img open fail.\n" );
         exit( -1 );
     }
 
     printf( "[INFO] Copy boot loader1 to image file\n" );
-    if( ( iSourceFd = open( argv[ 1 ], O_RDONLY | O_BINARY ) ) == -1 )
+    if( ( iSourceFd = open( argv[ 1 ], O_RDONLY ) ) == -1 )
     {
         fprintf( stderr, "[ERROR] %s open fail\n", argv[ 1 ] );
         exit( -1 );
@@ -52,7 +50,7 @@ int main(int argc, char* argv[])
             argv[ 1 ], iSourceSize, iBootLoaderSize1 );
 
     printf( "[INFO] Copy boot loader2 to image file\n" );
-    if( ( iSourceFd = open( argv[ 2 ], O_RDONLY | O_BINARY ) ) == -1 )
+    if( ( iSourceFd = open( argv[ 2 ], O_RDONLY) ) == -1 )
     {
         fprintf( stderr, "[ERROR] %s open fail\n", argv[ 2 ] );
         exit( -1 );
@@ -66,7 +64,7 @@ int main(int argc, char* argv[])
             argv[ 2 ], iSourceSize, iBootLoaderSize2 );
 
     printf( "[INFO] Copy protected mode kernel to image file\n" );
-    if( ( iSourceFd = open( argv[ 3 ], O_RDONLY | O_BINARY ) ) == -1 )
+    if( ( iSourceFd = open( argv[ 3 ], O_RDONLY) ) == -1 )
     {
         fprintf( stderr, "[ERROR] %s open fail\n", argv[ 3 ] );
         exit( -1 );
@@ -80,7 +78,7 @@ int main(int argc, char* argv[])
                 argv[ 3 ], iSourceSize, iKernel32SectorCount );
 
 	printf( "[INFO] Copy IA-32e mode kernel to image file\n");
-	if( ( iSourceFd = open( argv[ 4 ], O_RDONLY | O_BINARY ) ) == -1)
+	if( ( iSourceFd = open( argv[ 4 ], O_RDONLY) ) == -1)
 	{
 		fprintf( stderr, "[ERROR] %s open fail\n", argv[4]);
 		exit(-1);
@@ -134,7 +132,7 @@ void WriteKernelInformation( int iTargetFd, int iTotalKernelSectorCount, int iKe
     unsigned short usData;
     long lPosition;
     
-    lPosition = lseek( iTargetFd, (off_t)517, SEEK_SET );
+    lPosition = lseek( iTargetFd,517, SEEK_SET );
     if( lPosition == -1 )
     {
         fprintf( stderr, "lseek fail. Return value = %ld, errno = %d, %d\n", 
@@ -148,7 +146,7 @@ void WriteKernelInformation( int iTargetFd, int iTotalKernelSectorCount, int iKe
 	write( iTargetFd, &usData, 2 );
 
     printf( "[INFO] Total sector count except boot loader [%d]\n", iTotalKernelSectorCount );
-	printf( "[INFO] Total sector count except boot loader [%d]\n", iKernel32SectorCount );
+	printf( "[INFO] Total sector count protected mode kernel [%d]\n", iKernel32SectorCount );
 }
 
 int CopyFile( int iSourceFd, int iTargetFd )

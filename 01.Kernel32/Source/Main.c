@@ -63,7 +63,7 @@ void Main(void){
 
 	kPrintString(0,12,"Switch To IA-32e Mode");
 	kSwitchAndExecute64bitKernel();
-
+	kPrintString(0,13,"HHH");
 	while(1);
 }
 
@@ -118,8 +118,8 @@ void kCopyKernel64ImageTo2Mbyte(void)
 	DWORD* pdwSourceAddress, * pdwDestinationAddress;
 	int i;
 
-	wTotalKernelSectorCount = *((WORD*)0x7C05);
-	wKernel32SectorCount = *((WORD*)0x7C07);
+	wTotalKernelSectorCount = *((WORD*)0x10005);
+	wKernel32SectorCount = *((WORD*)0x10007);
 
 	pdwSourceAddress = (DWORD*)(0x10200 + (wKernel32SectorCount * 512));
 	pdwDestinationAddress = (DWORD*)0x200000;

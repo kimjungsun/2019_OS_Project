@@ -61,33 +61,8 @@ START:
 	push 14
 	call PRINTMESSAGE
 	add sp, 6
-
-	push RSIZE
-	push 3
-	push 0
-	call PRINTMESSAGE
-	add sp, 6
 	
-	mov eax, 0xE820
-	int 0x15
-
-	mov bx, MSIZE
-	mov dh, cl
-	shr dh, 4
-	add dh, 0x30
-	mov [bx], dh
-	add bx, 1
-	mov dh, cl
-	shl dh, 4
-	shr dh, 4
-	add dh, 0x30
-	mov [bx], dh
-
-	push MSIZE
-	push 3
-	push 10
-	call PRINTMESSAGE
-	add sp, 6
+	;RAM SIZE
 
 	push IMAGELOADINGMESSAGE
 	push 2 
@@ -265,9 +240,9 @@ LOADINGCOMPLETEMESSAGE:	db 'Complete~!!', 0
 MESSAGE1: db 'MINT64 OS Boot Loader Start~!!', 0
 CURRENT: db 'Current Data:', 0
 DATE: db '00/00/0000', 0
-RSIZE: db 'RAM Size:', 0
-MSIZE: db 'XX MB', 0
-
+RSIZE: db 'RAM Size: XX MB', 0
+LENGTH db 0
+TYPE   db 0
 ;	Var about reding disk
 SECTORNUMBER:	db 0x03
 HEADNUMBER:		db 0x00
