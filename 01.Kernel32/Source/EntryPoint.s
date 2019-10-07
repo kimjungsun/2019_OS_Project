@@ -3,7 +3,7 @@
 
 SECTION .text
 
-START:
+START:	
 	mov ax, 0x1020
 	mov ds, ax
 	mov es, ax
@@ -12,7 +12,7 @@ START:
 	int 0x15
 
 	jc .A20GATEERROR
-	jmp .A20GATESUCCESS
+	jmp RAM
 
 .A20GATEERROR:
 	in al, 0x92
@@ -20,7 +20,48 @@ START:
 	and al, 0xFE
 	out 0x92, al
 
-.A20GATESUCCESS:
+RAM:                    ; RAM size calculating.
+	.FIRSTCALL:
+	mov eax,0xE820  
+	mov ebx, 0   ; initialize to zero
+	mov ecx,20    ;expected buffer size
+	mov edx, 0x0534D4150   ; SMAP 
+	int 0x15   
+
+	.CHECK:
+	mov eax, dword[es:di + 16]  ; TYPE==1 check
+	cmp eax, 1    
+	je .RAM
+	cmp ebx, 0     ; if 0 =>last descriptor 
+	je .END
+
+	.SUBCALL: ; otherwise keep calling
+	mov eax, 0xE820  
+	mov edx, 0x0534D4150
+	int 0x15
+	jmp .CHECK
+
+	.RAM :
+	mov ecx, [es:di + 8]  ; 8: Low-Length only 
+	add [LENGTH], ecx    ; 32bits = 4GB > RAMsize
+	cmp ebx, 0            ;thus, enough return size
+	je .END
+	jmp .SUBCALL
+
+	.END :
+	mov eax, [LENGTH]
+	shr eax, 20      ; 1MB = 2^20Byte 
+	mov ax, ax         
+	mov dl, 10       ; ex) 64/10 = 6...4
+	div dl           
+	mov dl, al            
+	add dl, 0x30     ; q   
+	mov dh, ah 
+	add dh, 0x30     ; r
+
+	mov byte[RAMMESSAGE-$$+0x10000+10],dl
+	mov byte[RAMMESSAGE-$$+0x10000+11],dh
+
 	cli
 	lgdt [GDTR]
 	mov eax, 0x4000003B
@@ -38,6 +79,12 @@ PROTECTEDMODE:
 	mov ss, ax
 	mov esp, 0xFFFE
 	mov ebp, 0xFFFE
+	
+	push (RAMMESSAGE -$$ + 0x10200)
+	push 3
+	push 0
+	call PRINTMESSAGE
+	add esp, 12
 
 	push (SWITCHSUCCESSMESSAGE - $$ + 0x10200)
 	push 4
@@ -137,4 +184,6 @@ GDT:
 	GDTEND:
 
 SWITCHSUCCESSMESSAGE: db 'Switch To Protected Mode Success~!!', 0
+LENGTH: dd 0
+RAMMESSAGE: db 'RAM Size: 00MB',0
 times 512 - ($ - $$) db 0x00

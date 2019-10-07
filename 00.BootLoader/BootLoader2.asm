@@ -32,9 +32,8 @@ START:
 	push 0
 	call PRINTMESSAGE
 	add sp, 6
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-	;	Print message 'OS img loading..'
-	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+	;	Print Date
 	mov ah, 0x04
 	int 0x1A
 
@@ -61,14 +60,14 @@ START:
 	push 14
 	call PRINTMESSAGE
 	add sp, 6
-	
-	;RAM SIZE
 
 	push IMAGELOADINGMESSAGE
 	push 2 
 	push 0
 	call PRINTMESSAGE
 	add sp, 6
+	
+	;	RAM
 
 	;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 	;	OS img loading from Disk
@@ -242,7 +241,6 @@ CURRENT: db 'Current Data:', 0
 DATE: db '00/00/0000', 0
 RSIZE: db 'RAM Size: XX MB', 0
 LENGTH db 0
-TYPE   db 0
 ;	Var about reding disk
 SECTORNUMBER:	db 0x03
 HEADNUMBER:		db 0x00

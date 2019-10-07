@@ -17,3 +17,5 @@ START:
 	call Main
 
 	jmp $
+
+LEN		db	0

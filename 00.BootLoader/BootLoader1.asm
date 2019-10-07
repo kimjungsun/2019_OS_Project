@@ -209,6 +209,7 @@ PRINTMESSAGE:
 	;	Print the word
 	mov si, word [ bp + 8 ]
 
+
 .MESSAGELOOP:
 	mov cl, byte [ si ]
 	cmp cl, 0
