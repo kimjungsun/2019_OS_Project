@@ -31,6 +31,7 @@ void checkReadWrite()
 	kPrintString(0,16,"Write to 0x1FE000.....[Ok]");
 	*t = A2;
 	kPrintString(0,17,"Read from 0x1FF000.....[Ok]");
-	A2 = 0;
-	kPrintString(0,18,"Write to 0x1FF000.....[Ok]");
+	//If uncomment this, occur error!
+	//A2 = 0;
+	//kPrintString(0,18,"Write to 0x1FF000.....[Ok]");
 }
