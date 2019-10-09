@@ -52,6 +52,7 @@ kSwitchAndExecute64bitKernel:
 	mov eax, cr0
 	or eax, 0xE0000000
 	xor eax, 0x60000000
+	or eax, 0x00010000	;WP = 1 change
 	mov cr0, eax
 
 	jmp 0x08:0x200000
