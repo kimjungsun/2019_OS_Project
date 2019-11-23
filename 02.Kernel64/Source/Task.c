@@ -1,6 +1,6 @@
 #include "Task.h"
 #include "Descriptor.h"
-
+static int check = 0;
 static SCHEDULER gs_stScheduler;
 static TCBPOOLMANAGER gs_stTCBPoolManager;
 #define A 16807L
@@ -134,6 +134,8 @@ void kSetUpTask( TCB* pstTCB, QWORD qwFlags, QWORD qwEntryPointAddress,
     pstTCB->stContext.vqRegister[ TASK_RFLAGSOFFSET ] |= 0x0200;
     // ticket 
     pstTCB->tickets = qwFlags*10;
+	pstTCB->stride = qwFlags*10;          // same as tickets
+	pstTCB->pass = (1000/(qwFlags*10));  //initialized by stride size
     pstTCB->pvStackAddress = pvStackAddress;
     pstTCB->qwStackSize = qwStackSize;
     pstTCB->qwFlags = qwFlags;
@@ -146,6 +148,10 @@ void kInitializeScheduler( void )
     kInitializeList( &( gs_stScheduler.stReadyList ) );
 
     gs_stScheduler.pstRunningTask = kAllocateTCB();
+    gs_stScheduler.pstRunningTask -> tickets = 110; //console shell 
+    gs_stScheduler.pstRunningTask -> pass  = 12;  // randomly initialized
+    gs_stScheduler.pstRunningTask -> stride = 11; 
+    
 }
 
 void kSetRunningTask( TCB* pstTask )
@@ -181,23 +187,37 @@ void kSchedule( void )
 	{   
         return ;
 }
-	 LISTLINK *pstLink;
+   ///////////////////////Lottery Implementation .////////////////////////
+	 /*LISTLINK *pstLink;
     pstLink = (LISTLINK *)(&gs_stScheduler.stReadyList)->pvHeader;
-    pstNextTask = (TCB *)pstLink;
-    //
+    pstNextTask = (TCB *)pstLink;*/
+  
     //instead of "kGetNextTaskToRun() , due to we won't remove the header list.
     //this implementation always guarantees to point 'Task 1' List. 
-    // 
+    
+	//Stride implementation : always get returned PASS minimum Task.
+    pstNextTask = kminTask(&gs_stScheduler.stReadyList); 
+
     bPreviousFlag = kSetInterruptFlag( FALSE );
     if( pstNextTask == NULL )
     {
-		kPrintf("interrupt \n");
         kSetInterruptFlag( bPreviousFlag );
         return ;
     }
-    int ticket=0;
+    
+     //Stride implementation (3 Lines)
+    pstNextTask->pass += pstNextTask->stride;
+
+    pstRunningTask = gs_stScheduler.pstRunningTask; 
+
+    gs_stScheduler.pstRunningTask = pstNextTask;
+
+
+
+////////////////////////lottery implementation //////////////////////////////
+/*    int ticket=0;
     long ran = ranf() ;     // random number created.
-   	ran = ran % (long)550;  //just example. Task 1 - 10 allocated range in 1~550
+   	ran = ran % (long)660;  //just example. Task 1:i - 10 allocated range in 1~550
     pstRunningTask = gs_stScheduler.pstRunningTask; 
 	while(1){
 		ticket += pstNextTask->tickets;
@@ -208,7 +228,7 @@ void kSchedule( void )
 	else{       pstLink = pstLink->pvNext;
 				pstNextTask = (TCB *)pstLink;  // otherwise, move on .
 	}
-	}
+	}*/
     //kAddTaskToReadyList( pstRunningTask );
 	// we don't need to add the running task list back anymore cuz we haven't removed it before
 	kSwitchContext( &( pstRunningTask->stContext ), &( pstNextTask->stContext ) );
@@ -217,7 +237,24 @@ void kSchedule( void )
 
     kSetInterruptFlag( bPreviousFlag );
 }
-
+///////////////  Stride implementation main function ////////////////////
+TCB* kminTask(LIST *pstList){
+     TCB* minTask ;
+	 LISTLINK *pstLink =(LISTLINK *) pstList->pvHeader;
+	 minTask = (TCB *)pstLink;
+	 TCB *pstTask =(TCB *) pstLink->pvNext;
+// sample size : 11 (10+ consoleshell)
+	 for(int i = 0;i <11; i++){
+		 if(pstTask->pass < minTask->pass)
+		 {
+			 minTask = pstTask;
+		 }
+		 pstLink = pstLink->pvNext ;
+		 pstTask = (TCB *)pstLink;
+	 }
+	 return minTask;
+}
+////////////////////////////////////////////////////////////////////////
 BOOL kScheduleInInterrupt( void )
 {
     TCB* pstRunningTask, * pstNextTask;
@@ -228,13 +265,10 @@ BOOL kScheduleInInterrupt( void )
     {
         return FALSE;
     }
-    
     pcContextAddress = ( char* ) IST_STARTADDRESS + IST_SIZE - sizeof( CONTEXT );
     
     pstRunningTask = gs_stScheduler.pstRunningTask;
     kMemCpy( &( pstRunningTask->stContext ), pcContextAddress, sizeof( CONTEXT ) );
-//    kAddTaskToReadyList( pstRunningTask );
-
     gs_stScheduler.pstRunningTask = pstNextTask;
     kMemCpy( pcContextAddress, &( pstNextTask->stContext ), sizeof( CONTEXT ) );
     
